@@ -58,8 +58,16 @@ namespace ConsoleVideoPlayerVT100
                         _ = int.TryParse(sp[1], out height);
                         break;
                     case "duration":
-                        s = sp[1].PadLeft(15, '0');
-                        duration = s[..s.IndexOf('.')];
+                        s = sp[1];
+                        if (s=="N/A")
+                        {
+                            duration = s;
+                        }
+                        else
+                        {
+                            s = sp[1].PadLeft(15, '0');
+                            duration = s[..s.IndexOf('.')];
+                        }
                         break;
                     case "avg_frame_rate":
                         s = sp[1];
@@ -111,13 +119,16 @@ namespace ConsoleVideoPlayerVT100
         public IEnumerable<int> RenderVideo()
         {
             Stream dec_out = VideoDecoder.StandardOutput.BaseStream;
-            int read, frame = 0;
+            int read = dec_out.ReadByte(), frame = 0;
             RenderStatus status = RenderStatus.Read_B;
             int x = 0, y = 0, r = 0, g = 0, b = 0;
             StringBuilder sb = new((20 * renderW + 1) * renderH + 300);
-            Console.Clear();
-            Console.SetCursorPosition(x, y);
-            while ((read = dec_out.ReadByte()) >= 0)
+            if (read >= 0)
+            {
+                Console.Clear();
+                Console.SetCursorPosition(x, y);
+            }
+            while (read >= 0)
             {
                 RendererIdle.Reset();
                 if (y == renderH)
@@ -165,8 +176,8 @@ namespace ConsoleVideoPlayerVT100
                         break;
                 }
                 RendererIdle.Set();
+                read = dec_out.ReadByte();
             }
-            yield return ++frame;
         }
     }
 

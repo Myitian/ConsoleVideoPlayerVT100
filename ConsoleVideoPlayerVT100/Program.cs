@@ -6,6 +6,12 @@ namespace ConsoleVideoPlayerVT100
     {
         static void Main(string[] args)
         {
+            Console.CancelKeyPress += (_, _) =>
+            {
+                Console.Write("\x1B[0m\nForce exiting...\n");
+                Environment.Exit(0);
+            };
+
             string video_file;
             if (args.Length > 0)
             {
@@ -77,31 +83,31 @@ namespace ConsoleVideoPlayerVT100
                     frame_start = frame;
                     tick_start = tick_now;
                 }
-                Console.Write($"Frame: {frame,7} | FPS: {tps_d / tpf,6:f2} | 0.5s Avg. FPS: {tps_d / avg_tpf,6:f2} | {current_time_pos} / {player.Duration}");
+                Console.Write($"Frame: {frame,7} | FPS: {tps_d / tpf,6:f2} | 0.5s Avg. FPS: {tps_d / avg_tpf,6:f2} | {current_time_pos} / {player.Duration}".PadRight(w));
                 tick_prev = tick_now;
             }
+            Console.WriteLine("END");
             Thread.Sleep(1000);
+            Console.WriteLine("Exiting...");
         }
-        static (int, int) CalcOutputSize(int w, int h)
+        static (int, int) CalcOutputSize(int w, int h, double sar = .5)
         {
             int bw = Math.Min(Console.BufferWidth, Console.WindowWidth);
             int bh = Math.Min(Console.BufferHeight, Console.WindowHeight) - 1;
 
-            double hh = h / 2;
+            double rh = h * sar;
 
-            if (w <= bw && hh <= bh)
-                return (w, (int)Math.Floor(hh));
+            if (w <= bw && rh <= bh)
+                return (w, (int)Math.Round(rh));
 
-            double src_wh_ratio = w / (h / 2.0);
+            double src_wh_ratio = w / rh;
             double dst_wh_ratio = (double)bw / bh;
 
             if (src_wh_ratio > dst_wh_ratio)
-                return (bw, (int)Math.Floor(hh * bw / w));
+                return (bw, (int)Math.Round(rh * bw / w));
             else
-                return ((int)Math.Floor(w * bh / hh), bh);
+                return ((int)Math.Round(w * bh / rh), bh);
 
         }
-
-
     }
 }
